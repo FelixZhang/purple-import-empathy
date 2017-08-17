@@ -40,6 +40,34 @@
 # endif
 #endif
 
+static void
+import_empathy ()
+{
+    import_empathy_accounts ();
+    import_empathy_logs ()
+
+}
+
+static void
+import_empathy_logs ()
+{
+    // TODO
+}
+
+static gboolean
+plugin_load ()
+{
+    gboolean do_import = TRUE;
+    // TODO: maybe only do import at first start
+
+    if (do_import)
+        import_empathy ();
+
+    return TRUE;
+}
+
+// TODO: add a user action to trigger manually
+
 static PurplePluginInfo info = {
 	PURPLE_PLUGIN_MAGIC,
 	PURPLE_MAJOR_VERSION,
