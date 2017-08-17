@@ -56,8 +56,7 @@ static PurplePluginInfo info = {
 	"Import Empathy accounts and logs",
 	"Import Empathy accounts and logs",
 	"Felix Zhang <fezhang@suse.com>",
-	"https://build.opensuse.org", /* TODO: a project URL */
-
+	"https://github.com/FelixZhang/purple-import-empathy",
 
 	plugin_load,
 	NULL,
