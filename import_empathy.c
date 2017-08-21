@@ -27,7 +27,8 @@
 
 #include <glib.h>
 
-#include "debug.h"
+#include <core.h>
+#include <debug.h>
 #include <notify.h>
 #include <plugin.h>
 #include <version.h>
@@ -40,12 +41,74 @@
 # endif
 #endif
 
-static void
-import_empathy ()
-{
-    import_empathy_accounts ();
-    import_empathy_logs ()
+static GKeyFile *account_cfg = NULL;
 
+static gboolean
+load_empathy_account_cfg ()
+{
+    gchar *path;
+    gboolean ret;
+
+    path  = g_build_filename (g_get_home_dir (), ".local", "share", "telepathy",
+                                 "mission-control", "accounts.cfg", NULL);
+    purple_debug_info ("import-empathy", "Loading Empathy accounts from %s\n", path);
+
+    ret = g_key_file_load_from_file (account_cfg, path, G_KEY_FILE_NONE, NULL);
+    if (!ret) {
+        purple_debug_error ("import-empathy", "Error loading Empathy account.cfg");
+    }
+
+    return ret;
+}
+
+static void
+import_empathy_accounts ()
+{
+    gchar **empathy_account;
+    gchar **empathy_accounts;
+
+    empathy_accounts = g_key_file_get_groups (account_cfg, NULL);
+
+    for (empathy_account = empathy_accounts; *empathy_account; empathy_account++) {
+        PurpleAccount *purple_account;
+        gchar *str1, *str2;
+        gchar *name, *protocol;
+        /* account name */
+        str1 = g_key_file_get_string (account_cfg, *empathy_account, "param-account", NULL);
+        str2 = g_key_file_get_string (account_cfg, *empathy_account, "param-server", NULL);
+        name = g_strconcat (str1, "@", str2, NULL);
+
+        str1 = g_key_file_get_string (account_cfg, *empathy_account, "protocol", NULL);
+        protocol = g_strconcat ("prpl-", str1, NULL);
+
+        purple_account = purple_accounts_find (name, protocol);
+        if (purple_account) {
+            purple_debug_warning ("import-empathy", "Skipping existing %s account %s.\n", protocol, name);
+            continue ;
+        }
+        purple_account = purple_account_new (name, protocol);
+        purple_accounts_add (purple_account);
+
+		purple_account_set_username (purple_account, name);
+		purple_account_set_protocol_id (purple_account, protocol);
+        /* alias */
+        str1 = g_key_file_get_string (account_cfg, *empathy_account, "Nickname", NULL);
+		purple_account_set_alias (purple_account, str1);
+        /* enabled */
+        str1 = g_key_file_get_string (account_cfg, *empathy_account, "Enabled", NULL);
+		purple_account_set_enabled (purple_account, purple_core_get_ui (), !g_strcmp0 (str1, "true"));
+        // TODO get empathy password
+        /* encoding */
+        str1 = g_key_file_get_string (account_cfg, *empathy_account, "param-charset", NULL);
+        purple_account_set_string(purple_account, "encoding", str1);
+        /* port */
+        str1 = g_key_file_get_string (account_cfg, *empathy_account, "param-port", NULL);
+        purple_account_set_int(purple_account, "port", atoi(str1));
+        /* ssl */
+        str1 = g_key_file_get_string (account_cfg, *empathy_account, "param-use-ssl", NULL);
+        purple_account_set_bool(purple_account, "ssl", !g_strcmp0 (str1, "true"));
+    }
+  g_strfreev (empathy_accounts);
 }
 
 static void
@@ -54,16 +117,36 @@ import_empathy_logs ()
     // TODO
 }
 
+static void
+import_empathy ()
+{
+    account_cfg = g_key_file_new ();
+    if (!load_empathy_account_cfg ())
+        return;
+
+    import_empathy_accounts ();
+    import_empathy_logs ();
+}
+
 static gboolean
 plugin_load ()
 {
     gboolean do_import = TRUE;
+
+    purple_debug_info ("import-empathy", "--------loading empathy import plugin--------\n");
     // TODO: maybe only do import at first start
 
-    if (do_import)
+    if (do_import) {
         import_empathy ();
+    }
 
     return TRUE;
+}
+
+static void
+plugin_destroy ()
+{
+    g_key_file_free (account_cfg);
 }
 
 // TODO: add a user action to trigger manually
@@ -80,7 +163,7 @@ static PurplePluginInfo info = {
 
 	"core-fezhang-empathy_importer",
 	"Empathy Importer",
-	"0.1,
+	"0.1",
 	"Import Empathy accounts and logs",
 	"Import Empathy accounts and logs",
 	"Felix Zhang <fezhang@suse.com>",
@@ -88,7 +171,7 @@ static PurplePluginInfo info = {
 
 	plugin_load,
 	NULL,
-	NULL,
+	plugin_destroy,
 
 	NULL,
 	NULL,
