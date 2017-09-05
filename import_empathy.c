@@ -55,9 +55,8 @@ load_empathy_account_cfg ()
 
     ret = g_key_file_load_from_file (account_cfg, path, G_KEY_FILE_NONE, NULL);
     if (!ret) {
-        purple_debug_error ("import-empathy", "Error loading Empathy account.cfg");
+        purple_debug_error ("import-empathy", "Error loading account.cfg\n");
     }
-
     return ret;
 }
 
@@ -83,7 +82,7 @@ import_empathy_accounts ()
 
         purple_account = purple_accounts_find (name, protocol);
         if (purple_account) {
-            purple_debug_warning ("import-empathy", "Skipping existing %s account %s.\n", protocol, name);
+            purple_debug_warning ("import-empathy", "Skipping existing %s account %s\n", protocol, name);
             continue ;
         }
         purple_account = purple_account_new (name, protocol);
@@ -97,7 +96,7 @@ import_empathy_accounts ()
         /* enabled */
         str1 = g_key_file_get_string (account_cfg, *empathy_account, "Enabled", NULL);
 		purple_account_set_enabled (purple_account, purple_core_get_ui (), !g_strcmp0 (str1, "true"));
-        // TODO get empathy password
+        // TODO get empathy password from keyring
         /* encoding */
         str1 = g_key_file_get_string (account_cfg, *empathy_account, "param-charset", NULL);
         purple_account_set_string(purple_account, "encoding", str1);
@@ -133,7 +132,7 @@ plugin_load ()
 {
     gboolean do_import = TRUE;
 
-    purple_debug_info ("import-empathy", "--------loading empathy import plugin--------\n");
+    purple_debug_info ("import-empathy", "Loading plugin\n");
     // TODO: maybe only do import at first start
 
     if (do_import) {
