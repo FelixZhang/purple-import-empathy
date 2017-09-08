@@ -162,7 +162,6 @@ plugin_load ()
     gboolean do_import = TRUE;
 
     purple_debug_info ("import-empathy", "Loading plugin\n");
-    // TODO: maybe only do import at first start
 
     if (do_import) {
         import_empathy ();
@@ -177,7 +176,23 @@ plugin_destroy ()
     g_key_file_free (account_cfg);
 }
 
-// TODO: add a user action to trigger manually
+static void
+plugin_action_import_cb (PurplePluginAction *action)
+{
+    import_empathy ();
+}
+
+static GList *
+plugin_actions (PurplePlugin *plugin, gpointer context)
+{
+	GList *actions = NULL;
+    PurplePluginAction *action = NULL;
+
+    action = purple_plugin_action_new("Import from Empathy", plugin_action_import_cb);
+	actions = g_list_append(actions, action);
+
+	return actions;
+}
 
 static PurplePluginInfo info = {
 	PURPLE_PLUGIN_MAGIC,
@@ -204,7 +219,7 @@ static PurplePluginInfo info = {
 	NULL,
 	NULL,
 	NULL,
-	NULL, //plugin_actions,
+	plugin_actions, //plugin_actions,
 	NULL,
 	NULL,
 	NULL,
