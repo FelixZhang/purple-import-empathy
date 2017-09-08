@@ -49,8 +49,8 @@ load_empathy_account_cfg ()
     gchar *path;
     gboolean ret;
 
-    path  = g_build_filename (g_get_home_dir (), ".local", "share", "telepathy",
-                                 "mission-control", "accounts.cfg", NULL);
+    path = g_build_filename (g_get_user_data_dir (), "telepathy",
+                             "mission-control", "accounts.cfg", NULL);
     purple_debug_info ("import-empathy", "Loading Empathy accounts from %s\n", path);
 
     ret = g_key_file_load_from_file (account_cfg, path, G_KEY_FILE_NONE, NULL);
