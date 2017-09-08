@@ -54,6 +54,8 @@ load_empathy_account_cfg ()
     purple_debug_info ("import-empathy", "Loading Empathy accounts from %s\n", path);
 
     ret = g_key_file_load_from_file (account_cfg, path, G_KEY_FILE_NONE, NULL);
+    g_free (path);
+
     if (!ret) {
         purple_debug_error ("import-empathy", "Error loading account.cfg\n");
     }
