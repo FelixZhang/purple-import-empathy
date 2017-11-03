@@ -139,10 +139,26 @@ out:
     g_strfreev (empathy_accounts);
 }
 
+// TODO import logs
 static void
 import_empathy_logs ()
 {
-    // TODO
+    gchar **accounts;
+    gchar *basedir_name;
+    GDir *basedir;
+
+    accounts = g_key_file_get_groups (account_cfg, NULL);
+
+    // TODO get accounts by folder
+    basedir_name = g_build_filename (g_get_user_data_dir (), "TpLogger", "logs", NULL);
+
+    // TODO iter accounts
+        // TODO compare with g_strdelimit
+        // TODO if match, iter log files
+            // TODO make conversations, new log, write conv to logs
+
+    g_strfreev (accounts);
+    g_free (basedir_name);
 }
 
 static void
