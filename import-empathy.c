@@ -176,13 +176,7 @@ import_empathy (gchar *path)
 static gboolean
 plugin_load ()
 {
-    gboolean do_import = TRUE;
-
     purple_debug_info ("import-empathy", "Loading plugin\n");
-
-    if (do_import) {
-        import_empathy (NULL);
-    }
 
     return TRUE;
 }
