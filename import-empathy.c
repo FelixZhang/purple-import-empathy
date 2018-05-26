@@ -41,10 +41,8 @@
 # endif
 #endif
 
-static GKeyFile *account_cfg = NULL;
-
 static gboolean
-load_account_cfg ()
+load_account_cfg (GKeyFile *account_cfg)
 {
     gchar *path;
     gboolean res;
@@ -63,12 +61,10 @@ load_account_cfg ()
 }
 
 static void
-import_accounts ()
+import_accounts (GKeyFile *account_cfg)
 {
+    gchar **accounts = g_key_file_get_groups (account_cfg, NULL);
     gchar **account;
-    gchar **accounts;
-
-    accounts = g_key_file_get_groups (account_cfg, NULL);
 
     for (account = accounts; *account; account++) {
         PurpleAccount *purple_account;
@@ -141,9 +137,9 @@ out:
 
 // TODO import logs
 static void
-import_logs ()
+import_logs (GKeyFile *account_cfg)
 {
-    gchar **accounts;
+    gchar **accounts = g_key_file_get_groups (account_cfg, NULL);
     gchar *basedir_name;
     GDir *basedir;
 
@@ -162,14 +158,17 @@ import_logs ()
 }
 
 static void
-import_empathy ()
+import_empathy (gchar *path)
 {
-    account_cfg = g_key_file_new ();
-    if (!load_account_cfg ())
+    GKeyFile *account_cfg = g_key_file_new ();
+
+    if (!load_account_cfg (account_cfg, NULL))
         return;
 
-    import_accounts ();
-    import_logs ();
+    import_accounts (account_cfg);
+    import_logs (account_cfg);
+
+    g_key_file_free (account_cfg);
 }
 
 static gboolean
@@ -189,7 +188,6 @@ plugin_load ()
 static void
 plugin_destroy ()
 {
-    g_key_file_free (account_cfg);
 }
 
 static void
