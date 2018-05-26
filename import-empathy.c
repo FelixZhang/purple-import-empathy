@@ -74,9 +74,8 @@ import_accounts (GKeyFile *account_cfg)
         prot = g_key_file_get_string (account_cfg, *account, "protocol", NULL);
         if (g_strcmp0 (prot, "irc") == 0)
             import_account_irc (account_cfg, account);
-
-        {
-        }
+        else if (g_strcmp0 (prot, "groupwise") == 0)
+            import_account_groupwise (account_cfg, account);
         // TODO support more protocols
         else {
             purple_debug_warning ("import-empathy", "Currently only the following protocols are supported: irc\n");
@@ -129,6 +128,43 @@ import_account_irc (GKeyFile *account_cfg, gchar *account)
     s1 = g_key_file_get_string (account_cfg, *account, "param-use-ssl", NULL);
     purple_account_set_bool(prpl_account, "ssl", !g_strcmp0 (s1, "true"));
     // TODO get empathy password from keyring
+
+out:
+    g_free (name);
+}
+
+static void
+import_account_groupwise (GKeyFile *account_cfg, gchar *account)
+{
+    PurpleAccount *prpl_account = NULL;
+    const gchar *protocol = "prpl-novell";
+    gchar *s;
+
+    s = g_key_file_get_string (account_cfg, *account, "param-account", NULL);
+    if (!s) {
+        purple_debug_warning ("import-empathy", "Invalid param_account in account %s\n", *account);
+        goto out;
+    }
+
+    prpl_account = purple_accounts_find (s, protocol);
+    if (prpl_account) {
+        purple_debug_warning ("import-empathy", "Skip existing account, protocol: %s, username: %s\n", protocol, name);
+        goto out;
+    }
+    prpl_account = purple_account_new (s, protocol);
+    purple_accounts_add (prpl_account);
+
+    purple_account_set_username (prpl_account, s);
+    purple_account_set_protocol_id (prpl_account, protocol);
+    /* password */
+    s = g_key_file_get_string (account_cfg, *account, "param-password", NULL);
+    purple_account_set_password(prpl_account, s);
+    /* server */
+    s = g_key_file_get_string (account_cfg, *account, "param-server", NULL);
+    purple_account_set_string(prpl_account, "server", s);
+    /* port */
+    s = g_key_file_get_string (account_cfg, *account, "param-port", NULL);
+    purple_account_set_int(prpl_account, "port", atoi(s));
 
 out:
     g_free (name);
