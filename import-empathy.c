@@ -178,6 +178,8 @@ plugin_load ()
 {
     purple_debug_info ("import-empathy", "Loading plugin\n");
 
+    // TODO prompt for import if empathy profiles found on the first run
+
     return TRUE;
 }
 
