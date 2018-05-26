@@ -74,7 +74,7 @@ import_accounts (GKeyFile *account_cfg)
 
         str1 = g_key_file_get_string (account_cfg, *account, "protocol", NULL);
         if (!str1) {
-            purple_debug_warning ("import_empathy", "Invalid account %s with no protocol specified\n", *account);
+            purple_debug_warning ("import-empathy", "Invalid account %s with no protocol specified\n", *account);
             continue;
         }
 
@@ -87,11 +87,11 @@ import_accounts (GKeyFile *account_cfg)
             str1 = g_key_file_get_string (account_cfg, *account, "param-account", NULL);
             str2 = g_key_file_get_string (account_cfg, *account, "param-server", NULL);
             if (!str1) {
-                purple_debug_warning ("import_empathy", "Invalid account %s with no param_account specified\n", *account);
+                purple_debug_warning ("import-empathy", "Invalid account %s with no param_account specified\n", *account);
                 goto out;
             }
             if (!str2) {
-                purple_debug_warning ("import_empathy", "Invalid account %s with no param_server specified\n", *account);
+                purple_debug_warning ("import-empathy", "Invalid account %s with no param_server specified\n", *account);
                 goto out;
             }
             name = g_strconcat (str1, "@", str2, NULL);
@@ -129,8 +129,8 @@ out:
         }
         // TODO support more protocols
         else {
-            purple_debug_warning ("import_empathy", "Currently only the following protocols are supported: irc\n");
-            purple_debug_warning ("import_empathy", "Skipping account %s with unsupported protocol %s\n", *account, str1);
+            purple_debug_warning ("import-empathy", "Currently only the following protocols are supported: irc\n");
+            purple_debug_warning ("import-empathy", "Skipping account %s with unsupported protocol %s\n", *account, str1);
             continue;
         }
     }
