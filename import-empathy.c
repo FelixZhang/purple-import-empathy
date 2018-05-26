@@ -42,21 +42,23 @@
 #endif
 
 static gboolean
-load_account_cfg (GKeyFile *account_cfg)
+load_account_cfg (GKeyFile *account_cfg, gchar *path)
 {
-    gchar *path;
     gboolean res;
 
-    path = g_build_filename (g_get_user_data_dir (), "telepathy",
-                             "mission-control", "accounts.cfg", NULL);
+    if (path == NULL) {
+        path = g_build_filename (g_get_user_data_dir (), "telepathy",
+                                 "mission-control", "accounts.cfg", NULL);
+    }
+
     purple_debug_info ("import-empathy", "Loading Empathy accounts from %s\n", path);
 
     res = g_key_file_load_from_file (account_cfg, path, G_KEY_FILE_NONE, NULL);
-    g_free (path);
     if (!res) {
         purple_debug_error ("import-empathy", "Error loading account.cfg\n");
     }
 
+    g_free (path);
     return res;
 }
 
@@ -162,7 +164,7 @@ import_empathy (gchar *path)
 {
     GKeyFile *account_cfg = g_key_file_new ();
 
-    if (!load_account_cfg (account_cfg, NULL))
+    if (!load_account_cfg (account_cfg, path))
         return;
 
     import_accounts (account_cfg);
@@ -179,7 +181,7 @@ plugin_load ()
     purple_debug_info ("import-empathy", "Loading plugin\n");
 
     if (do_import) {
-        import_empathy ();
+        import_empathy (NULL);
     }
 
     return TRUE;
@@ -193,7 +195,7 @@ plugin_destroy ()
 static void
 plugin_action_import_cb (PurplePluginAction *action)
 {
-    import_empathy ();
+    import_empathy (NULL);
 }
 
 static GList *
