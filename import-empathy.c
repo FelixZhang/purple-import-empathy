@@ -69,17 +69,17 @@ import_accounts (GKeyFile *account_cfg)
     gchar **account;
 
     for (account = accounts; *account; account++) {
-        gchar *prot;
+        purple_debug_info ("import-empathy", "Importing account %s", *account);
 
-        prot = g_key_file_get_string (account_cfg, *account, "protocol", NULL);
+        gchar *prot = g_key_file_get_string (account_cfg, *account, "protocol", NULL);
         if (g_strcmp0 (prot, "irc") == 0)
             import_account_irc (account_cfg, account);
         else if (g_strcmp0 (prot, "groupwise") == 0)
             import_account_groupwise (account_cfg, account);
         // TODO support more protocols
         else {
-            purple_debug_warning ("import-empathy", "Currently only the following protocols are supported: irc\n");
-            purple_debug_warning ("import-empathy", "Skipping account %s with unsupported protocol %s\n", *account, str1);
+            purple_debug_warning ("import-empathy", "Currently only the following protocols are supported: irc, groupwise\n");
+            purple_debug_warning ("import-empathy", "Skipping account %s with unsupported protocol %s\n", *account, prot);
             continue;
         }
     }
