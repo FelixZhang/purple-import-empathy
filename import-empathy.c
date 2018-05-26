@@ -143,7 +143,6 @@ import_logs (GKeyFile *account_cfg)
 {
     gchar **accounts = g_key_file_get_groups (account_cfg, NULL);
     gchar *basedir_name;
-    GDir *basedir;
 
     accounts = g_key_file_get_groups (account_cfg, NULL);
 
