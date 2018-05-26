@@ -112,6 +112,10 @@ import_account_irc (GKeyFile *account_cfg, gchar *account)
 
     purple_account_set_username (prpl_account, name);
     purple_account_set_protocol_id (prpl_account, protocol);
+    /* password */
+    s1 = g_key_file_get_string (account_cfg, *account, "param-password", NULL);
+    purple_account_set_password(prpl_account, s1);
+    // TODO get empathy password from keyring
     /* alias */
     s1 = g_key_file_get_string (account_cfg, *account, "Nickname", NULL);
     purple_account_set_alias (prpl_account, s1);
@@ -127,7 +131,6 @@ import_account_irc (GKeyFile *account_cfg, gchar *account)
     /* ssl */
     s1 = g_key_file_get_string (account_cfg, *account, "param-use-ssl", NULL);
     purple_account_set_bool(prpl_account, "ssl", !g_strcmp0 (s1, "true"));
-    // TODO get empathy password from keyring
 
 out:
     g_free (name);
