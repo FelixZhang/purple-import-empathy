@@ -115,6 +115,35 @@ import_irc_account (GKeyFile *account_cfg, gchar **account)
     return purple_account;
 }
 
+static void
+import_irc_logs (GKeyFile *account_cfg, gchar **account)
+{
+    purple_debug_info ("import-empathy", "Importing irc logs for account %s\n", *account);
+
+    gchar *dir_name;
+    GDir *dir;
+
+    dir_name = g_build_filename (g_get_user_data_dir (),
+                                 "TpLogger",
+                                 "logs",
+                                 g_strdelimit (*account, "/", '_'),
+                                 NULL);
+    dir = g_dir_open (dir_name, 0, NULL);
+    if (dir) {
+        const gchar *file;
+
+        while ((file = g_dir_read_name (dir))) {
+            // TODO
+        }
+        g_dir_close (dir);
+    }
+
+    g_free (dir_name);
+}
+
+    g_strdelimit (*account, "/", '_');
+}
+
 static PurpleAccount *
 import_groupwise_account (GKeyFile *account_cfg, gchar **account)
 {
@@ -198,6 +227,7 @@ import_empathy (gchar *path)
 
         if (g_strcmp0 (prot, "irc") == 0) {
             purple_account = import_irc_account (account_cfg, account);
+            import_irc_logs (account_cfg, account);
         }
         else if (g_strcmp0 (prot, "groupwise") == 0) {
             purple_account = import_groupwise_account (account_cfg, account);
