@@ -181,30 +181,6 @@ import_groupwise_account (GKeyFile *account_cfg, gchar **account)
     return purple_account;
 }
 
-/*
-// TODO import logs
-static void
-import_logs (GKeyFile *account_cfg)
-{
-    gchar **accounts = g_key_file_get_groups (account_cfg, NULL);
-    gchar **account;
-    gchar *basedir_name;
-
-    // TODO get accounts by folder
-    basedir_name = g_build_filename (g_get_user_data_dir (), "TpLogger", "logs", NULL);
-
-    for (account = accounts; *account; account++) {
-        g_strdelimit (*account, "/", '_');
-        // TODO compare with g_strdelimit
-        // TODO if match, iter log files
-            // TODO make conversations, new log, write conv to logs
-    }
-
-    g_strfreev (accounts);
-    g_free (basedir_name);
-}
-*/
-
 static void
 import_empathy (gchar *path)
 {
