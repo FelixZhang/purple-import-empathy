@@ -62,56 +62,86 @@ load_account_cfg (GKeyFile *account_cfg, gchar *path)
     return res;
 }
 
+static gchar *
+map_protocol_name (gchar * protocol)
+{
+    gchar *res;
+
+    if (g_strcmp0 (protocol, "irc") == 0) {
+        res = "prpl-irc";
+    } else if (g_strcmp0 (protocol, "groupwise") == 0) {
+        res = "prpl-novell";
+    } else {
+        purple_debug_error ("import-empathy", "Protocol %s not supported\n", protocol);
+    }
+
+    return res;
+}
+
 static PurpleAccount *
-import_irc_account (GKeyFile *account_cfg, gchar **account)
+import_account (GKeyFile *account_cfg, gchar **account)
 {
     PurpleAccount *purple_account = NULL;
-    const gchar *protocol = "prpl-irc";
-    gchar *name;
-    gchar *s1, *s2;
+    gchar *protocol;
+    gchar *param_server;
+    gchar *param_port;
+    gchar *param_charset;
+    gchar *param_use_ssl;
+    gchar *param_account;
+    gchar *enabled;
+    gchar *nickname;
+    gchar *param_password;
 
-    s1 = g_key_file_get_string (account_cfg, *account, "param-account", NULL);
-    s2 = g_key_file_get_string (account_cfg, *account, "param-server", NULL);
-    if (s1 == NULL || s2 == NULL) {
-        purple_debug_warning ("import-empathy", "Invalid param_account or param_server in account %s\n", *account);
+    gchar *pp_protocol;
+    gchar *pp_name;
 
-        return NULL;
-    }
-    name = g_strconcat (s1, "@", s2, NULL);
+    purple_debug_info ("import-empathy", "Importing account %s", *account);
 
-    purple_account = purple_accounts_find (name, protocol);
+    protocol = g_key_file_get_string (account_cfg, *account, "protocol", NULL);
+    param_server = g_key_file_get_string (account_cfg, *account, "param-server", NULL);
+    param_account = g_key_file_get_string (account_cfg, *account, "param-account", NULL);
+    nickname = g_key_file_get_string (account_cfg, *account, "Nickname", NULL);
+    enabled = g_key_file_get_string (account_cfg, *account, "Enabled", NULL);
+    param_charset = g_key_file_get_string (account_cfg, *account, "param-charset", NULL);
+    param_port = g_key_file_get_string (account_cfg, *account, "param-port", NULL);
+    param_use_ssl = g_key_file_get_string (account_cfg, *account, "param-use-ssl", NULL);
+    param_password = g_key_file_get_string (account_cfg, *account, "param-password", NULL);
+    // TODO try fetching password from keyring
+
+    g_return_val_if_fail(protocol, NULL);
+    g_return_val_if_fail(param_server, NULL);
+    g_return_val_if_fail(param_account, NULL);
+
+    pp_name = g_strconcat (param_account, "@", param_server, NULL);
+    pp_protocol = map_protocol_name (protocol);
+
+    g_return_val_if_fail(pp_protocol, NULL);
+
+    purple_account = purple_accounts_find (pp_name, pp_protocol);
     if (purple_account) {
-        purple_debug_warning ("import-empathy", "Skip existing account, protocol: %s, username: %s\n", protocol, name);
+        purple_debug_warning ("import-empathy", "Account %s already exists. Protocol: %s, Username: %s\n",
+                              *account,
+                              pp_protocol,
+                              pp_name);
+    } else {
+        purple_account = purple_account_new (pp_name, pp_protocol);
+        purple_accounts_add (purple_account);
 
-        g_free (name);
-        return purple_account;
+        if (g_strcmp0 (protocol, "irc") == 0 ) {
+            purple_account_set_username (purple_account, pp_name);
+        } else {
+            purple_account_set_username (purple_account, param_account);
+        }
+        purple_account_set_protocol_id (purple_account, pp_protocol);
+        purple_account_set_alias (purple_account, nickname);
+        purple_account_set_enabled (purple_account, purple_core_get_ui (), g_strcmp0 (enabled, "true") == 0);
+        purple_account_set_string(purple_account, "encoding", param_charset);
+        purple_account_set_int(purple_account, "port", atoi(param_port));
+        purple_account_set_bool(purple_account, "ssl", g_strcmp0 (param_use_ssl, "true") == 0);
+        purple_account_set_password(purple_account, param_password);
     }
 
-    purple_account = purple_account_new (name, protocol);
-    purple_accounts_add (purple_account);
-
-    purple_account_set_username (purple_account, name);
-    purple_account_set_protocol_id (purple_account, protocol);
-    /* password */
-    s1 = g_key_file_get_string (account_cfg, *account, "param-password", NULL);
-    purple_account_set_password(purple_account, s1);
-    // TODO get empathy password from keyring
-    /* alias */
-    s1 = g_key_file_get_string (account_cfg, *account, "Nickname", NULL);
-    purple_account_set_alias (purple_account, s1);
-    /* enabled */
-    s1 = g_key_file_get_string (account_cfg, *account, "Enabled", NULL);
-    purple_account_set_enabled (purple_account, purple_core_get_ui (), !g_strcmp0 (s1, "true"));
-    /* encoding */
-    s1 = g_key_file_get_string (account_cfg, *account, "param-charset", NULL);
-    purple_account_set_string(purple_account, "encoding", s1);
-    /* port */
-    s1 = g_key_file_get_string (account_cfg, *account, "param-port", NULL);
-    purple_account_set_int(purple_account, "port", atoi(s1));
-    /* ssl */
-    s1 = g_key_file_get_string (account_cfg, *account, "param-use-ssl", NULL);
-    purple_account_set_bool(purple_account, "ssl", !g_strcmp0 (s1, "true"));
-
+    g_free (pp_name);
     return purple_account;
 }
 
@@ -141,46 +171,6 @@ import_logs (GKeyFile *account_cfg, gchar **account)
     g_free (dir_name);
 }
 
-    g_strdelimit (*account, "/", '_');
-}
-
-static PurpleAccount *
-import_groupwise_account (GKeyFile *account_cfg, gchar **account)
-{
-    PurpleAccount *purple_account = NULL;
-    const gchar *protocol = "prpl-novell";
-    gchar *s;
-
-    s = g_key_file_get_string (account_cfg, *account, "param-account", NULL);
-    if (!s) {
-        purple_debug_warning ("import-empathy", "Invalid param_account in account %s\n", *account);
-        return purple_account;
-    }
-
-    purple_account = purple_accounts_find (s, protocol);
-    if (purple_account) {
-        purple_debug_warning ("import-empathy", "Skip existing account, protocol: %s, username: %s\n", protocol, s);
-        return purple_account;
-    }
-
-    purple_account = purple_account_new (s, protocol);
-    purple_accounts_add (purple_account);
-
-    purple_account_set_username (purple_account, s);
-    purple_account_set_protocol_id (purple_account, protocol);
-    /* password */
-    s = g_key_file_get_string (account_cfg, *account, "param-password", NULL);
-    purple_account_set_password(purple_account, s);
-    /* server */
-    s = g_key_file_get_string (account_cfg, *account, "param-server", NULL);
-    purple_account_set_string(purple_account, "server", s);
-    /* port */
-    s = g_key_file_get_string (account_cfg, *account, "param-port", NULL);
-    purple_account_set_int(purple_account, "port", atoi(s));
-
-    return purple_account;
-}
-
 static void
 import_empathy (gchar *path)
 {
@@ -188,40 +178,21 @@ import_empathy (gchar *path)
     gchar **accounts;
     gchar **account;
 
-    if (!load_account_cfg (account_cfg, path)) {
-        return;
-    }
+    g_return_if_fail (load_account_cfg (account_cfg, path));
 
     accounts = g_key_file_get_groups (account_cfg, NULL);
+    g_return_if_fail (accounts);
 
     for (account = accounts; *account; account++) {
-        PurpleAccount *purple_account;
-        purple_debug_info ("import-empathy", "Importing account %s", *account);
-
-        gchar *prot = g_key_file_get_string (account_cfg, *account, "protocol", NULL);
-        if (prot == NULL) {
-            purple_debug_error ("import_empathy", "Protocol not specified\n");
-        }
-
-        if (g_strcmp0 (prot, "irc") == 0) {
-            purple_account = import_irc_account (account_cfg, account);
-        }
-        else if (g_strcmp0 (prot, "groupwise") == 0) {
-            purple_account = import_groupwise_account (account_cfg, account);
-        }
-        // TODO support more protocols
+        PurpleAccount *purple_account = import_account (account_cfg, account);
 
         if (purple_account) {
             import_logs (account_cfg, account);
         }
         else {
-            purple_debug_warning ("import-empathy", "Protocol %s not supported\n", prot);
-            purple_debug_warning ("import-empathy", "Only the following protocols are supported: irc, groupwise\n");
             continue;
         }
-        g_free (prot);
     }
-
 
     g_key_file_free (account_cfg);
     g_strfreev (accounts);
