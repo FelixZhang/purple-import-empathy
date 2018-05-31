@@ -188,8 +188,9 @@ import_empathy (gchar *path)
     gchar **accounts;
     gchar **account;
 
-    if (!load_account_cfg (account_cfg, path))
+    if (!load_account_cfg (account_cfg, path)) {
         return;
+    }
 
     accounts = g_key_file_get_groups (account_cfg, NULL);
 
@@ -198,8 +199,9 @@ import_empathy (gchar *path)
         purple_debug_info ("import-empathy", "Importing account %s", *account);
 
         gchar *prot = g_key_file_get_string (account_cfg, *account, "protocol", NULL);
-        if (prot == NULL)
+        if (prot == NULL) {
             purple_debug_error ("import_empathy", "Protocol not specified\n");
+        }
 
         if (g_strcmp0 (prot, "irc") == 0) {
             purple_account = import_irc_account (account_cfg, account);
@@ -209,8 +211,9 @@ import_empathy (gchar *path)
         }
         // TODO support more protocols
 
-        if (purple_account)
+        if (purple_account) {
             import_logs (account_cfg, account);
+        }
         else {
             purple_debug_warning ("import-empathy", "Protocol %s not supported\n", prot);
             purple_debug_warning ("import-empathy", "Only the following protocols are supported: irc, groupwise\n");
