@@ -116,7 +116,7 @@ import_irc_account (GKeyFile *account_cfg, gchar **account)
 }
 
 static void
-import_irc_logs (GKeyFile *account_cfg, gchar **account)
+import_logs (GKeyFile *account_cfg, gchar **account)
 {
     purple_debug_info ("import-empathy", "Importing irc logs for account %s\n", *account);
 
@@ -203,12 +203,14 @@ import_empathy (gchar *path)
 
         if (g_strcmp0 (prot, "irc") == 0) {
             purple_account = import_irc_account (account_cfg, account);
-            import_irc_logs (account_cfg, account);
         }
         else if (g_strcmp0 (prot, "groupwise") == 0) {
             purple_account = import_groupwise_account (account_cfg, account);
         }
         // TODO support more protocols
+
+        if (purple_account)
+            import_logs (account_cfg, account);
         else {
             purple_debug_warning ("import-empathy", "Protocol %s not supported\n", prot);
             purple_debug_warning ("import-empathy", "Only the following protocols are supported: irc, groupwise\n");
