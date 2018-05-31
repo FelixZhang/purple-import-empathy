@@ -67,9 +67,9 @@ map_protocol_name (gchar * protocol)
 {
     gchar *res;
 
-    if (g_strcmp0 (protocol, "irc") == 0) {
+    if (purple_strequal (protocol, "irc")) {
         res = "prpl-irc";
-    } else if (g_strcmp0 (protocol, "groupwise") == 0) {
+    } else if (purple_strequal (protocol, "groupwise")) {
         res = "prpl-novell";
     } else {
         purple_debug_error ("import-empathy", "Protocol %s not supported\n", protocol);
@@ -127,17 +127,17 @@ import_account (GKeyFile *account_cfg, gchar **account)
         purple_account = purple_account_new (pp_name, pp_protocol);
         purple_accounts_add (purple_account);
 
-        if (g_strcmp0 (protocol, "irc") == 0 ) {
+        if (purple_strequal (protocol, "irc")) {
             purple_account_set_username (purple_account, pp_name);
         } else {
             purple_account_set_username (purple_account, param_account);
         }
         purple_account_set_protocol_id (purple_account, pp_protocol);
         purple_account_set_alias (purple_account, nickname);
-        purple_account_set_enabled (purple_account, purple_core_get_ui (), g_strcmp0 (enabled, "true") == 0);
+        purple_account_set_enabled (purple_account, purple_core_get_ui (), purple_strequal (enabled, "true"));
         purple_account_set_string(purple_account, "encoding", param_charset);
         purple_account_set_int(purple_account, "port", atoi(param_port));
-        purple_account_set_bool(purple_account, "ssl", g_strcmp0 (param_use_ssl, "true") == 0);
+        purple_account_set_bool(purple_account, "ssl", purple_strequal (param_use_ssl, "true"));
         purple_account_set_password(purple_account, param_password);
     }
 
